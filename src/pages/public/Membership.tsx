@@ -26,7 +26,7 @@ const Membership: React.FC = () => {
       {/* Header */}
       <Box
         sx={{
-          backgroundColor: 'secondary.main',
+          backgroundColor: 'primary.main',
           color: 'white',
           paddingY: { xs: 6, md: 8 },
           paddingX: { xs: 2, md: 4 },
@@ -120,7 +120,7 @@ const Membership: React.FC = () => {
           sx={{
             textAlign: 'center',
             padding: 6,
-            backgroundColor: 'primary.light',
+            backgroundColor: 'secondary.light',
             borderRadius: 3,
             color: 'white',
           }}

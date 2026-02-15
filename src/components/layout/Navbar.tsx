@@ -13,6 +13,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import logo from '../../assets/logo.jpg';
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -129,20 +130,25 @@ const Navbar: React.FC = () => {
             paddingX: { xs: 2, md: 4, lg: 8 },
           }}
         >
-          <Box
-            component={Link}
-            to="/"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              color: 'primary.main',
-              fontWeight: 700,
-              fontSize: { xs: '1.25rem', md: '1.5rem' },
-            }}
-          >
-            CodeBridge
-          </Box>
+<Box
+  component={Link}
+  to="/"
+  sx={{
+    display: 'flex',
+    alignItems: 'center',
+    textDecoration: 'none',
+  }}
+>
+  <Box
+    component="img"
+    src={logo}
+    alt="CodeBridge Logo"
+    sx={{
+      height: { xs: 32, md: 40 },
+      width: 'auto',
+    }}
+  />
+</Box>
 
           {isMobile ? (
             <IconButton

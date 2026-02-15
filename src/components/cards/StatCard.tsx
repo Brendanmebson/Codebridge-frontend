@@ -14,7 +14,7 @@ const StatCard: React.FC<StatCardProps> = ({
   value,
   subtitle,
   icon,
-  color = 'primary.main',
+  color = 'secondary.main',
 }) => {
   return (
     <Card

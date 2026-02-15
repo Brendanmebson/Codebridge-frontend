@@ -74,7 +74,7 @@ principles of transparency, accountability, equity, and mutual benefit.
             backgroundColor: 'background.paper',
             borderRadius: 2,
             borderLeft: '4px solid',
-            borderColor: 'secondary.main',
+            borderColor: 'primary.main',
           }}
         >
           <Typography variant="h5" sx={{ marginBottom: 2, fontWeight: 600 }}>

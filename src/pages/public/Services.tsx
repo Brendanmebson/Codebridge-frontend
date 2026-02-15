@@ -147,7 +147,7 @@ const Services: React.FC = () => {
               marginBottom: 4,
             }}
           >
-            <AccountBalanceIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
+            <AccountBalanceIcon sx={{ fontSize: 40, color: 'primary.main' }} />
             <Typography variant="h3">
               Loan Services
             </Typography>
@@ -184,7 +184,7 @@ const Services: React.FC = () => {
                   <Typography
                     variant="h6"
                     sx={{
-                      color: 'secondary.main',
+                      color: 'primary.main',
                       fontWeight: 700,
                     }}
                   >

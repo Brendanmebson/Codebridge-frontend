@@ -35,7 +35,7 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #1565C0 0%, #0D47A1 100%)',
+          backgroundColor: 'secondary.dark',
           color: 'white',
           paddingY: { xs: 8, md: 12 },
           paddingX: { xs: 2, md: 4, lg: 8 },
@@ -179,7 +179,7 @@ const Home: React.FC = () => {
       {/* CTA Section */}
       <Box
         sx={{
-          backgroundColor: 'secondary.main',
+          backgroundColor: 'primary.main',
           color: 'white',
           paddingY: { xs: 6, md: 8 },
           paddingX: { xs: 2, md: 4 },
@@ -206,7 +206,7 @@ const Home: React.FC = () => {
                 size="large"
                 sx={{
                   backgroundColor: 'white',
-                  color: 'secondary.main',
+                  color: 'primary.main',
                   '&:hover': {
                     backgroundColor: 'grey.100',
                   },
