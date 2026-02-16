@@ -18,7 +18,7 @@ import api from '../../utils/api';
 import type { SavingsAccount, Loan } from '../../types';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, member } = useAuth(); // ADDED member
   const navigate = useNavigate();
   const [savingsAccounts, setSavingsAccounts] = useState<SavingsAccount[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -127,10 +127,10 @@ const Dashboard: React.FC = () => {
       {/* Welcome Section */}
       <Box sx={{ marginBottom: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, marginBottom: 1 }}>
-          Welcome back, {user?.first_name}!
+          Welcome back, {member?.first_name || 'Member'}!
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Member Number: {user?.member_number}
+          Member Number: {member?.member_number || user}
         </Typography>
       </Box>
 
@@ -148,7 +148,7 @@ const Dashboard: React.FC = () => {
         </Alert>
       )}
 
-      {user?.status === 'pending' && (
+      {member?.status === 'pending' && (
         <Alert severity="info" sx={{ marginBottom: 3 }}>
           Your account is pending approval. You will be notified once your membership is activated.
         </Alert>
@@ -237,7 +237,7 @@ const Dashboard: React.FC = () => {
             color="secondary"
             size="large"
             onClick={() => navigate('/dashboard/loans/apply')}
-            disabled={user?.status !== 'active'}
+            disabled={member?.status !== 'active'}
             sx={{ flex: { xs: '1 1 100%', sm: '1 1 auto' } }}
           >
             Apply for Loan

@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { supabase } from '../config/supabase';
-import type { User, Session } from '@supabase/supabase-js';
 import type { Member } from '../types';
 
 interface AuthContextType {
   user: string | null;
   member: Member | null;
+  userRole: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -29,11 +30,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<string | null>(null);
   const [member, setMember] = useState<Member | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initializing, setInitializing] = useState(true);
 
-  // Fetch member profile
-  const fetchProfile = async (authId: string) => {
+  // Fetch member profile - SIMPLIFIED
+  const fetchProfile = async (authId: string): Promise<Member | null> => {
     try {
       console.log('Fetching profile for auth_id:', authId);
       
@@ -41,25 +42,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .from('members')
         .select('*')
         .eq('auth_id', authId)
-        .single();
-
-      console.log('Profile fetch result:', { data, error });
+        .maybeSingle(); // Use maybeSingle instead of single
 
       if (error) {
         console.error('Profile fetch error:', error);
-        // If member not found, logout
-        if (error.code === 'PGRST116') {
-          console.log('Member not found, logging out...');
-          await logout();
-        }
         return null;
       }
 
       if (data) {
-        console.log('Member found:', data.member_number);
+        console.log('Member found:', data.member_number, 'Role:', data.role || 'member');
         return data;
       }
 
+      console.log('No member found for auth_id:', authId);
       return null;
     } catch (error) {
       console.error('Fetch profile error:', error);
@@ -67,129 +62,80 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Initialize auth state
+  // Initialize auth state - SIMPLIFIED
   useEffect(() => {
     console.log('Initializing auth...');
     
-    let mounted = true;
+    let subscription: any;
 
     const initializeAuth = async () => {
       try {
-        // Get current session
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error('Session error:', error);
-          if (mounted) {
-            setUser(null);
-            setMember(null);
-            setLoading(false);
-            setInitializing(false);
-          }
-          return;
-        }
+        const { data: { session } } = await supabase.auth.getSession();
 
         if (session?.user) {
           console.log('Session found:', session.user.id);
           const memberData = await fetchProfile(session.user.id);
           
-          if (mounted) {
-            if (memberData) {
-              setUser(memberData.member_number);
-              setMember(memberData);
-              console.log('Login complete, user set:', memberData.member_number);
-            } else {
-              setUser(null);
-              setMember(null);
-            }
-          }
-        } else {
-          console.log('No active session');
-          if (mounted) {
-            setUser(null);
-            setMember(null);
+          if (memberData) {
+            setUser(memberData.member_number);
+            setMember(memberData);
+            setUserRole(memberData.role || 'member');
+            console.log('User authenticated:', memberData.member_number, 'Role:', memberData.role);
           }
         }
       } catch (error) {
         console.error('Initialize auth error:', error);
-        if (mounted) {
-          setUser(null);
-          setMember(null);
-        }
       } finally {
-        if (mounted) {
-          setLoading(false);
-          setInitializing(false);
-        }
+        setLoading(false);
       }
     };
 
     initializeAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
+    // Auth state listener
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
 
-        if (!mounted) return;
-
-        if (event === 'SIGNED_IN' && session?.user) {
-          setLoading(true);
-          const memberData = await fetchProfile(session.user.id);
-          
-          if (mounted) {
-            if (memberData) {
-              setUser(memberData.member_number);
-              setMember(memberData);
-            } else {
-              setUser(null);
-              setMember(null);
-            }
-            setLoading(false);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          if (mounted) {
-            setUser(null);
-            setMember(null);
-            setLoading(false);
-          }
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed');
+      if (event === 'SIGNED_IN' && session?.user) {
+        const memberData = await fetchProfile(session.user.id);
+        
+        if (memberData) {
+          setUser(memberData.member_number);
+          setMember(memberData);
+          setUserRole(memberData.role || 'member');
+          console.log('Login successful:', memberData.member_number, 'Role:', memberData.role);
         }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setMember(null);
+        setUserRole(null);
       }
-    );
+    });
+
+    subscription = data.subscription;
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
-
-  // Add timeout to prevent infinite loading
-  useEffect(() => {
-    if (initializing) {
-      const timeout = setTimeout(() => {
-        console.log('Auth initialization timeout - forcing loading to false');
-        setLoading(false);
-        setInitializing(false);
-      }, 5000); // 5 second timeout
-
-      return () => clearTimeout(timeout);
-    }
-  }, [initializing]);
 
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('Attempting login for:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
 
       if (data.user) {
+        console.log('Auth successful, fetching profile...');
         const memberData = await fetchProfile(data.user.id);
         
         if (!memberData) {
@@ -199,9 +145,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         setUser(memberData.member_number);
         setMember(memberData);
+        setUserRole(memberData.role || 'member');
+        
+        console.log('Login complete:', {
+          member_number: memberData.member_number,
+          role: memberData.role,
+          email: memberData.email
+        });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login failed:', error);
+      setLoading(false);
       throw error;
     } finally {
       setLoading(false);
@@ -214,11 +168,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await supabase.auth.signOut();
       setUser(null);
       setMember(null);
-      
-      // Clear localStorage
-      localStorage.removeItem('supabase.auth.token');
-      
-      // Redirect to login
+      setUserRole(null);
+      localStorage.clear();
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
@@ -231,53 +182,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
 
-      // Register with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error('Registration failed - no user created');
-      }
-
-      // Create member profile
-      const { data: memberData, error: memberError } = await supabase
-        .from('members')
-        .insert({
-          auth_id: authData.user.id,
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           email: data.email,
-          first_name: data.firstName,
-          last_name: data.lastName,
+          password: data.password,
+          firstName: data.firstName,
+          lastName: data.lastName,
           phone: data.phone,
-          date_of_birth: data.dateOfBirth,
+          dateOfBirth: data.dateOfBirth,
           address: data.address,
-          id_type: data.idType,
-          id_number: data.idNumber,
-          status: 'active',
-        })
-        .select()
-        .single();
-
-      if (memberError) {
-        // If member creation fails, delete the auth user
-        await supabase.auth.admin.deleteUser(authData.user.id);
-        throw memberError;
-      }
-
-      // Create default savings account
-      await supabase.from('savings_accounts').insert({
-        member_id: memberData.id,
-        account_type: 'regular',
-        balance: 0,
+          idType: data.idType,
+          idNumber: data.idNumber,
+        }),
       });
 
-      // Auto-login after registration
-      if (memberData) {
-        setUser(memberData.member_number);
-        setMember(memberData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+
+      const { member } = await response.json();
+
+      if (member) {
+        setUser(member.member_number);
+        setMember(member);
+        setUserRole(member.role || 'member');
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -288,7 +221,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, member, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, member, userRole, loading, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );

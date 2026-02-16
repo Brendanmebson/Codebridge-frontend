@@ -6,6 +6,9 @@ export interface Member {
   email: string;
   phone: string;
   address: string;
+  role: string; // ADD THIS
+  kyc_status?: string; // ADD THIS
+  kyc_verified_at?: string; // ADD THIS
   date_of_birth: string;
   status: 'pending' | 'active' | 'suspended';
   registration_date: string;

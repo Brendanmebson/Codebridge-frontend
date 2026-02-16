@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/logo.jpg';
 
@@ -20,7 +20,10 @@ const Navbar: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
+
+  const isDashboard = location.pathname.startsWith('/dashboard');
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -130,25 +133,27 @@ const Navbar: React.FC = () => {
             paddingX: { xs: 2, md: 4, lg: 8 },
           }}
         >
-<Box
-  component={Link}
-  to="/"
-  sx={{
-    display: 'flex',
-    alignItems: 'center',
-    textDecoration: 'none',
-  }}
->
-  <Box
-    component="img"
-    src={logo}
-    alt="CodeBridge Logo"
-    sx={{
-      height: { xs: 32, md: 40 },
-      width: 'auto',
-    }}
-  />
-</Box>
+          {/* LOGO */}
+          <Box
+            component={Link}
+            to={isDashboard ? '/dashboard' : '/'}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            <Box
+              component="img"
+              src={logo}
+              alt="CodeBridge Logo"
+              sx={{
+                height: { xs: 32, md: 40 },
+                width: 'auto',
+                cursor: 'pointer',
+              }}
+            />
+          </Box>
 
           {isMobile ? (
             <IconButton
