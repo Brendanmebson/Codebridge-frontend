@@ -14,7 +14,6 @@ const Membership: React.FC = () => {
   ];
 
   const requirements = [
-    'Completed registration form',
     'Valid government-issued identification',
     'Passport photograph',
     'Initial savings contribution (minimum ₦5,000)',
@@ -96,8 +95,8 @@ const Membership: React.FC = () => {
             </Typography>
 
             <Typography variant="body1" sx={{ marginBottom: 3 }}>
-              Prospective members are required to complete the online registration
-              form and submit the necessary documents:
+              Prospective members are required to have completed a registration
+              form and submitted the necessary documents, then just Login:
             </Typography>
 
             <Box component="ul" sx={{ marginLeft: 3 }}>
@@ -133,7 +132,7 @@ const Membership: React.FC = () => {
           </Typography>
           <Button
             component={Link}
-            to="/register"
+            to="/login"
             variant="contained"
             size="large"
             sx={{
@@ -144,7 +143,7 @@ const Membership: React.FC = () => {
               },
             }}
           >
-            Register Now
+            Login Now
           </Button>
         </Box>
       </Container>

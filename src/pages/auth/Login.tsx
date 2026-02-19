@@ -103,13 +103,13 @@ const Login: React.FC = () => {
                 Forgot Password?
               </Button>
             </Box>
-
+{/* 
             <Typography variant="body2" textAlign="center" mt={2}>
               Don't have an account?{' '}
               <Button component={Link} to="/register" sx={{ textTransform: 'none', p: 0 }}>
                 Register here
               </Button>
-            </Typography>
+            </Typography> */}
           </Stack>
         </Box>
       </Box>

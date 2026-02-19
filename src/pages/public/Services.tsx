@@ -198,7 +198,7 @@ const Services: React.FC = () => {
           <Box sx={{ textAlign: 'center', marginTop: 4 }}>
             <Button
               component={Link}
-              to="/register"
+              to="/login"
               variant="contained"
               size="large"
             >

@@ -81,7 +81,7 @@ const Home: React.FC = () => {
               spacing={2}
               sx={{ marginTop: 2 }}
             >
-              <Button
+              {/* <Button
                 component={Link}
                 to="/register"
                 variant="contained"
@@ -96,8 +96,8 @@ const Home: React.FC = () => {
                 }}
               >
                 Register With Us
-              </Button>
-              <Button
+              </Button> */}
+              {/* <Button
                 component={Link}
                 to="/login"
                 variant="outlined"
@@ -112,8 +112,8 @@ const Home: React.FC = () => {
                   },
                 }}
               >
-                Member Login
-              </Button>
+               Login Now
+              </Button> */}
             </Stack>
           </Box>
         </Container>
@@ -201,7 +201,7 @@ const Home: React.FC = () => {
             >
               <Button
                 component={Link}
-                to="/register"
+                to="/login"
                 variant="contained"
                 size="large"
                 sx={{
@@ -212,7 +212,7 @@ const Home: React.FC = () => {
                   },
                 }}
               >
-                Register Now
+                Login Now
               </Button>
               <Button
                 component={Link}

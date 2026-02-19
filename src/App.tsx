@@ -26,7 +26,7 @@ import Membership from './pages/public/Membership';
 
 // Auth Pages
 import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
+// import Register from './pages/auth/Register';
 
 // Dashboard Pages
 import Dashboard from './pages/dashboard/Dashboard';
@@ -142,7 +142,7 @@ const AppRoutes: React.FC = () => {
 
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* <Route path="/register" element={<Register />} /> */}
 
           {/* Dashboard Routes */}
           <Route

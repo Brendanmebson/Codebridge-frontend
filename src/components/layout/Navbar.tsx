@@ -93,7 +93,7 @@ const Navbar: React.FC = () => {
             Logout
           </Button>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, marginTop: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 ,paddingLeft: 5}}>
             <Button
               component={Link}
               to="/login"
@@ -195,9 +195,9 @@ const Navbar: React.FC = () => {
                   <Button component={Link} to="/login" variant="outlined">
                     Login
                   </Button>
-                  <Button component={Link} to="/register" variant="contained">
+                  {/* <Button component={Link} to="/register" variant="contained">
                     Register
-                  </Button>
+                  </Button> */}
                 </Box>
               )}
             </Box>
