@@ -21,14 +21,14 @@ const Footer: React.FC = () => {
     { label: 'About Us', to: '/about' },
     { label: 'Our Services', to: '/services' },
     { label: 'Membership', to: '/membership' },
-    { label: 'Loan Calculator', to: '/loans' },
+    { label: 'Loan Calculator', to: '/loan-calculator' },
     { label: 'Contact Us', to: '/contact' },
   ];
 
   const legalLinks = [
     { label: 'Governance', to: '/governance' },
-    { label: 'Privacy Policy', to: '/privacy' },
-    { label: 'Terms & Conditions', to: '/terms' },
+    { label: 'Privacy Policy', to: '/privacy-policy' },
+    { label: 'Terms & Conditions', to: '/termsandconditions' },
     { label: 'Loan Policy', to: '/loan-policy' },
   ];
 
@@ -444,9 +444,8 @@ const Footer: React.FC = () => {
 
           <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
             {[
-              { label: 'Privacy', to: '/privacy' },
-              { label: 'Terms', to: '/terms' },
-              { label: 'Sitemap', to: '/sitemap' },
+              { label: 'Privacy', to: '/privacy-policy' },
+              { label: 'Terms', to: '/termsandconditions' },
             ].map((l, i) => (
               <Box
                 key={i}

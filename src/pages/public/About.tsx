@@ -139,7 +139,7 @@ const About: React.FC = () => {
         background: heroGradient,
 
         overflow: 'hidden',
-                paddingTop: { xs: 3, md: 4 },
+                paddingTop: { xs: 7, md: 8 },
         paddingBottom: { xs: 12, md: 20 },
       }}>
         {/* Blobs */}

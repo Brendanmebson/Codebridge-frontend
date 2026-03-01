@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Alert, InputAdornment, IconButton } from '@mui/material';
+import {
+  Box, Typography, TextField, Button, Alert,
+  InputAdornment, IconButton, useTheme,
+} from '@mui/material';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import EmailIcon from '@mui/icons-material/Email';
@@ -7,26 +10,21 @@ import LockIcon from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import SavingsIcon from '@mui/icons-material/Savings';
-
-const C = {
-  primaryMain:   '#2E7D32',
-  primaryLight:  '#4CAF50',
-  primaryDark:   '#1B5E20',
-  secondaryMain: '#66BB6A',
-  secondaryDark: '#388E3C',
-  bgDefault:     '#F1F8E9',
-  bgPaper:       '#FFFFFF',
-  textPrimary:   '#1B1B1B',
-  textSecondary: '#4F4F4F',
-};
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import GroupsIcon from '@mui/icons-material/Groups';
 
 const Login: React.FC = () => {
+  const theme = useTheme();
+  const { palette, typography, shape } = theme;
+  const br = shape.borderRadius as number;
+
   const navigate = useNavigate();
   const { login, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [focused, setFocused] = useState<string | null>(null);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,137 +51,189 @@ const Login: React.FC = () => {
 
   const isSubmitting = loading || authLoading;
 
+  const fieldSx = (name: string) => ({
+    '& .MuiOutlinedInput-root': {
+      borderRadius: `${br * 1.5}px`,
+      fontFamily: typography.fontFamily,
+      fontSize: '0.88rem',
+      background: focused === name ? palette.background.paper : `${palette.primary.main}04`,
+      transition: 'all 0.25s cubic-bezier(0.22,1,0.36,1)',
+      '& fieldset': {
+        borderColor: focused === name ? palette.primary.main : `${palette.primary.main}20`,
+        borderWidth: focused === name ? 2 : 1,
+        transition: 'all 0.25s',
+      },
+      '&:hover fieldset': { borderColor: `${palette.primary.main}50` },
+      '&.Mui-focused fieldset': { borderColor: palette.primary.main },
+    },
+    '& .MuiInputLabel-root': {
+      fontFamily: typography.fontFamily,
+      fontSize: '0.85rem',
+      color: palette.text.secondary,
+      '&.Mui-focused': { color: palette.primary.main },
+    },
+    '& .MuiInputBase-input': { py: '11px' },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      transition: 'color 0.25s',
+      color: focused === name ? palette.primary.main : palette.text.secondary,
+    },
+  });
+
+  const stats = [
+    { icon: <GroupsIcon sx={{ fontSize: 16 }} />, value: '1,240+', label: 'Active Members' },
+    { icon: <TrendingUpIcon sx={{ fontSize: 16 }} />, value: '₦1.2B+', label: 'Total Disbursed' },
+    { icon: <ShieldOutlinedIcon sx={{ fontSize: 16 }} />, value: '98%', label: 'Loan Approval Rate' },
+  ];
+
+  const memberAvatars = [
+    'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=60&q=80',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&q=80',
+    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&q=80',
+    'https://images.unsplash.com/photo-1573496799652-408c2ac9fe98?w=60&q=80',
+  ];
+
   return (
     <Box sx={{
-      minHeight: '100vh',
+      height: '100vh',
+      overflow: 'hidden',
       display: 'grid',
       gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: typography.fontFamily,
     }}>
 
-      {/* ── LEFT PANEL ───────────────────────────────────── */}
+      {/* ── LEFT PANEL ──────────────────────────────────────── */}
       <Box sx={{
         position: 'relative',
-        background: `linear-gradient(135deg, ${C.primaryDark} 0%, ${C.primaryMain} 55%, ${C.secondaryDark} 100%)`,
+        background: `linear-gradient(150deg, ${palette.primary.dark} 0%, ${palette.primary.main} 55%, ${palette.secondary.dark} 100%)`,
         display: { xs: 'none', md: 'flex' },
         flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        px: 7, py: 8,
+        justifyContent: 'space-between',
+        px: 6, py: 5,
         overflow: 'hidden',
+        height: '100vh',
       }}>
-        {/* Shapes */}
-        <Box sx={{ position: 'absolute', top: '-80px', right: '-80px', width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%)', border: '1px solid rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
-        <Box sx={{ position: 'absolute', bottom: '-60px', left: '-60px', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%)', pointerEvents: 'none' }} />
-        <Box sx={{ position: 'absolute', top: '40%', right: '10%', width: 120, height: 120, borderRadius: '70% 30% 60% 40% / 50% 60% 40% 50%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', transform: 'rotate(25deg)', pointerEvents: 'none' }} />
-        {[...Array(4)].map((_, i) => (
-          <Box key={i} sx={{ position: 'absolute', width: 6, height: 6, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.4)', top: `${18 + i * 18}%`, right: `${6 + (i % 2) * 8}%`, animation: `lp${i} ${2.5 + i * 0.4}s ease-in-out ${i * 0.4}s infinite`, [`@keyframes lp${i}`]: { '0%,100%': { opacity: 0.2 }, '50%': { opacity: 0.8 } } }} />
+        {/* Blobs */}
+        <Box sx={{ position: 'absolute', top: -100, right: -100, width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.09), transparent 70%)', pointerEvents: 'none' }} />
+        <Box sx={{ position: 'absolute', bottom: -80, left: -80, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%)', pointerEvents: 'none' }} />
+        <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")`, backgroundSize: '200px', opacity: 0.6 }} />
+        {[...Array(5)].map((_, i) => (
+          <Box key={i} sx={{ position: 'absolute', width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.45)', top: `${15 + i * 15}%`, right: `${6 + (i % 3) * 5}%`, animation: `d${i} ${2.8 + i * 0.3}s ease-in-out ${i * 0.35}s infinite`, [`@keyframes d${i}`]: { '0%,100%': { opacity: 0.15, transform: 'scale(1)' }, '50%': { opacity: 0.9, transform: 'scale(1.6)' } } }} />
         ))}
 
-        {/* Logo mark */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 6, position: 'relative', zIndex: 2 }}>
-          <Box sx={{ width: 44, height: 44, borderRadius: '12px', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <SavingsIcon sx={{ fontSize: 24, color: '#fff' }} />
-          </Box>
-          <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
-            CodeBridge
-          </Typography>
-        </Box>
 
+
+        {/* Middle: content */}
         <Box sx={{ position: 'relative', zIndex: 2 }}>
-          <Typography sx={{ fontFamily: "'Playfair Display', serif", fontSize: '2.6rem', fontWeight: 900, color: '#fff', lineHeight: 1.15, mb: 2 }}>
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 2, py: 0.6, mb: 3, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '100px', width: 'fit-content' }}>
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: palette.secondary.light, boxShadow: `0 0 8px ${palette.secondary.light}`, animation: 'blink 2.5s ease infinite', '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.3 } } }} />
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.88)', letterSpacing: '0.06em', fontWeight: 500 }}>Secure Member Portal</Typography>
+          </Box>
+
+          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '2.8rem', fontWeight: 700, color: '#fff', lineHeight: 1.1, mb: 1.5 }}>
             Welcome<br />
-            <Box component="span" sx={{ background: 'linear-gradient(90deg, #A5D6A7, #E8F5E9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <Box component="span" sx={{ fontStyle: 'italic', fontWeight: 300, background: `linear-gradient(90deg, ${palette.secondary.light}, #E8F5E9)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Back
             </Box>
           </Typography>
-          <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontSize: '1rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.8, mb: 5, maxWidth: 360 }}>
-            Login to access your cooperative account, manage savings, and apply for loans.
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.75, maxWidth: 320, fontWeight: 300, mb: 4 }}>
+            Login to access your cooperative account, manage savings, apply for loans, and track your financial progress.
           </Typography>
 
-          {/* Mini stats */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {[
-              { value: '1,240+', label: 'Active Members' },
-              { value: '₦1.2B', label: 'Total Disbursed' },
-              { value: '98%', label: 'Loan Approval Rate' },
-            ].map((stat, i) => (
-              <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ width: 4, height: 36, borderRadius: 4, background: `linear-gradient(180deg, #A5D6A7, rgba(165,214,167,0.3))` }} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {stats.map((s, i) => (
+              <Box key={i} sx={{
+                display: 'flex', alignItems: 'center', gap: 2, p: 1.5,
+                background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: `${br * 1.5}px`,
+                transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
+                '&:hover': { background: 'rgba(255,255,255,0.14)', transform: 'translateX(4px)' },
+              }}>
+                <Box sx={{ width: 32, height: 32, borderRadius: `${br - 2}px`, flexShrink: 0, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: palette.secondary.light }}>
+                  {s.icon}
+                </Box>
                 <Box>
-                  <Typography sx={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>{stat.value}</Typography>
-                  <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>{stat.label}</Typography>
+                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '1rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>{s.value}</Typography>
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.72rem' }}>{s.label}</Typography>
                 </Box>
               </Box>
             ))}
           </Box>
         </Box>
+
+        {/* Bottom: Social proof */}
+        <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex' }}>
+            {memberAvatars.map((img, i) => (
+              <Box key={i} sx={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.35)', ml: i > 0 ? -1.25 : 0 }}>
+                <Box component="img" src={img} alt="" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </Box>
+            ))}
+          </Box>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', lineHeight: 1.4, fontSize: '0.72rem' }}>
+            1,240 members already<br />on the platform
+          </Typography>
+        </Box>
       </Box>
 
-      {/* ── RIGHT PANEL (Form) ────────────────────────────── */}
+
+      {/* ── RIGHT PANEL ─────────────────────────────────────── */}
       <Box sx={{
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        px: { xs: 3, sm: 6, md: 7 },
-        py: { xs: 8, md: 6 },
-        background: C.bgDefault,
-        minHeight: { xs: '100vh', md: 'auto' },
+        px: { xs: 3, sm: 6, md: 6 },
+        background: palette.background.default,
+        height: '100vh',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
-        {/* Mobile logo */}
-        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1.5, mb: 6 }}>
-          <Box sx={{ width: 40, height: 40, borderRadius: '11px', background: `linear-gradient(135deg, ${C.primaryMain}, ${C.primaryDark})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <SavingsIcon sx={{ fontSize: 22, color: '#fff' }} />
-          </Box>
-          <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontSize: '1rem', fontWeight: 700, color: C.textPrimary }}>CodeBridge</Typography>
-        </Box>
+        <Box sx={{ position: 'absolute', bottom: -60, right: -60, width: 280, height: 280, borderRadius: '50%', background: `radial-gradient(circle, ${palette.primary.main}06, transparent 70%)`, pointerEvents: 'none' }} />
 
-        <Box sx={{ width: '100%', maxWidth: 420 }}>
+
+        <Box sx={{ width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }}>
+
           {/* Heading */}
-          <Box sx={{ mb: 5 }}>
-            <Box sx={{ display: 'inline-block', px: 2, py: 0.5, mb: 2, background: `${C.primaryMain}14`, border: `1px solid ${C.primaryMain}30`, borderRadius: '100px' }}>
-              <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.78rem', color: C.primaryMain, fontWeight: 600, letterSpacing: '0.06em' }}>MEMBER PORTAL</Typography>
+          <Box sx={{ mb: 3.5 }}>
+            <Box sx={{ display: 'inline-block', px: 2, py: 0.5, background: `${palette.primary.main}10`, border: `1px solid ${palette.primary.main}22`, borderRadius: '100px', mb: 2 }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.68rem', fontWeight: 700, color: palette.primary.main, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                Member Portal
+              </Typography>
             </Box>
-            <Typography sx={{ fontFamily: "'Playfair Display', serif", fontSize: { xs: '2rem', md: '2.4rem' }, fontWeight: 800, color: C.textPrimary, lineHeight: 1.2, mb: 1 }}>
+            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '2rem', fontWeight: 700, color: palette.text.primary, lineHeight: 1.2, mb: 0.5 }}>
               Member Login
             </Typography>
-            <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.97rem', color: C.textSecondary }}>
+            <Typography variant="body2" sx={{ color: palette.text.secondary, fontWeight: 300, fontSize: '0.85rem' }}>
               Access your cooperative account
             </Typography>
           </Box>
 
           {/* Error */}
           {error && (
-            <Alert severity="error" sx={{ mb: 3, borderRadius: '12px', fontFamily: "'DM Sans', sans-serif" }}>
+            <Alert severity="error" sx={{ mb: 2.5, borderRadius: `${br * 1.5}px`, fontFamily: typography.fontFamily, background: 'rgba(211,47,47,0.06)', border: '1px solid rgba(211,47,47,0.18)', py: 0.5, '& .MuiAlert-icon': { color: 'error.main' } }}>
               {error}
             </Alert>
           )}
 
           {/* Form */}
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               required fullWidth
               name="email" label="Email Address" type="email"
               autoComplete="email"
               value={formData.email}
               onChange={handleChange}
+              onFocus={() => setFocused('email')}
+              onBlur={() => setFocused(null)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <EmailIcon sx={{ fontSize: 20, color: C.primaryMain }} />
+                    <EmailIcon sx={{ fontSize: 18 }} />
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                  backgroundColor: C.bgPaper,
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: C.primaryMain },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: C.primaryMain, borderWidth: 2 },
-                },
-                '& .MuiInputLabel-root.Mui-focused': { color: C.primaryMain },
-              }}
+              sx={fieldSx('email')}
             />
 
             <TextField
@@ -193,35 +243,29 @@ const Login: React.FC = () => {
               autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
+              onFocus={() => setFocused('password')}
+              onBlur={() => setFocused(null)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <LockIcon sx={{ fontSize: 20, color: C.primaryMain }} />
+                    <LockIcon sx={{ fontSize: 18 }} />
                   </InputAdornment>
                 ),
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">
-                      {showPassword ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: palette.text.secondary, '&:hover': { color: palette.primary.main } }}>
+                      {showPassword ? <VisibilityOff sx={{ fontSize: 17 }} /> : <Visibility sx={{ fontSize: 17 }} />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                  backgroundColor: C.bgPaper,
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: C.primaryMain },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: C.primaryMain, borderWidth: 2 },
-                },
-                '& .MuiInputLabel-root.Mui-focused': { color: C.primaryMain },
-              }}
+              sx={fieldSx('password')}
             />
 
-            {/* Forgot password */}
-            <Box sx={{ textAlign: 'right', mt: -1 }}>
+            {/* Forgot */}
+            <Box sx={{ textAlign: 'right', mt: -0.75 }}>
               <Button component={Link} to="/forgot-password"
-                sx={{ fontFamily: "'DM Sans', sans-serif", textTransform: 'none', fontSize: '0.85rem', color: C.primaryMain, p: 0, minWidth: 0, '&:hover': { background: 'transparent', textDecoration: 'underline' } }}>
+                sx={{ fontFamily: typography.fontFamily, textTransform: 'none', fontSize: '0.8rem', color: palette.primary.main, p: 0, minWidth: 0, fontWeight: 500, '&:hover': { background: 'transparent', textDecoration: 'underline' } }}>
                 Forgot Password?
               </Button>
             </Box>
@@ -230,36 +274,41 @@ const Login: React.FC = () => {
             <Button
               type="submit" fullWidth variant="contained" size="large"
               disabled={isSubmitting}
-              endIcon={!isSubmitting && <ArrowForwardIcon />}
+              endIcon={!isSubmitting ? <ArrowForwardIcon sx={{ fontSize: 17 }} /> : undefined}
               sx={{
-                background: isSubmitting
-                  ? `${C.primaryMain}80`
-                  : `linear-gradient(135deg, ${C.primaryMain}, ${C.primaryDark})`,
+                background: isSubmitting ? `${palette.primary.main}70` : `linear-gradient(135deg, ${palette.primary.main}, ${palette.primary.dark})`,
                 color: '#fff',
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 700, fontSize: '1rem',
-                py: 1.8, borderRadius: '12px',
+                fontFamily: typography.fontFamily,
+                fontWeight: 600, fontSize: '0.93rem',
+                py: 1.5,
+                borderRadius: `${br * 1.5}px`,
                 textTransform: 'none',
-                boxShadow: isSubmitting ? 'none' : `0 8px 28px ${C.primaryMain}44`,
-                transition: 'all 0.3s',
-                '&:hover:not(:disabled)': {
-                  background: `linear-gradient(135deg, ${C.primaryDark}, ${C.primaryMain})`,
-                  transform: 'translateY(-1px)',
-                  boxShadow: `0 12px 36px ${C.primaryMain}55`,
-                },
-                '&.Mui-disabled': { color: '#fff' },
+                boxShadow: isSubmitting ? 'none' : `0 8px 24px ${palette.primary.main}35`,
+                transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
+                '&:hover:not(:disabled)': { boxShadow: `0 14px 36px ${palette.primary.main}50`, transform: 'translateY(-1px)' },
+                '&.Mui-disabled': { color: 'rgba(255,255,255,0.6)' },
               }}
             >
-              {isSubmitting ? 'Logging in...' : 'Login to Account'}
+              {isSubmitting ? 'Logging in…' : 'Login to Account'}
             </Button>
           </Box>
 
-          {/* Footer links */}
-          <Box sx={{ mt: 4, pt: 4, borderTop: `1px solid ${C.primaryMain}18`, textAlign: 'center' }}>
-            <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontSize: '0.85rem', color: C.textSecondary }}>
+          {/* Trust row */}
+          <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${palette.primary.main}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25 }}>
+            <Box sx={{ width: 26, height: 26, borderRadius: `${br - 4}px`, background: `${palette.primary.main}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: palette.primary.main }}>
+              <ShieldOutlinedIcon sx={{ fontSize: 14 }} />
+            </Box>
+            <Typography variant="caption" sx={{ color: palette.text.secondary, fontSize: '0.76rem' }}>
+              Secured with 256-bit SSL encryption
+            </Typography>
+          </Box>
+
+          {/* Footer link */}
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="caption" sx={{ color: palette.text.secondary, fontSize: '0.78rem' }}>
               Not a member yet?{' '}
               <Button component={Link} to="/membership"
-                sx={{ fontFamily: "'DM Sans', sans-serif", textTransform: 'none', fontSize: '0.85rem', color: C.primaryMain, p: 0, minWidth: 0, fontWeight: 600, '&:hover': { background: 'transparent', textDecoration: 'underline' } }}>
+                sx={{ fontFamily: typography.fontFamily, textTransform: 'none', fontSize: '0.78rem', color: palette.primary.main, p: 0, minWidth: 0, fontWeight: 600, '&:hover': { background: 'transparent', textDecoration: 'underline' } }}>
                 Learn about membership
               </Button>
             </Typography>

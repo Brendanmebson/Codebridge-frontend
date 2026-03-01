@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,6 +16,8 @@ import { InactivityProvider } from './contexts/InactivityContext';
 // Layout
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import NotFound from './components/layout/NotFound';
+
 
 // Public Pages
 import Home from './pages/public/Home';
@@ -23,10 +25,10 @@ import About from './pages/public/About';
 import Services from './pages/public/Services';
 import Contact from './pages/public/Contact';
 import Membership from './pages/public/Membership';
+import LoanCalculator from './pages/public/LoanCalculator';
 
 // Auth Pages
 import Login from './pages/auth/Login';
-// import Register from './pages/auth/Register';
 
 // Dashboard Pages
 import Dashboard from './pages/dashboard/Dashboard';
@@ -34,6 +36,10 @@ import Savings from './pages/dashboard/Savings';
 import Loans from './pages/dashboard/Loans';
 import LoanApplication from './pages/dashboard/LoanApplication';
 import LoanDetails from './pages/dashboard/LoanDetails';
+import Governance from './pages/public/Governance';
+import PrivacyPolicy from './pages/public/PrivacyPolicy';
+import TermsAndConditions from './pages/public/TermsAndConditions';
+import LoanPolicy from './pages/public/LoanPolicy';
 
 // Admin Pages
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -42,13 +48,28 @@ import LoanApprovals from './pages/Admin/LoanApprovals';
 
 
 // =============================
+// Scroll To Top Component
+// =============================
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }, [pathname]);
+
+  return null;
+};
+
+
+// =============================
 // Protected Route Component
 // =============================
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
 
-  console.log('ProtectedRoute check:', { user, loading });
-
   if (loading) {
     return (
       <Box
@@ -65,22 +86,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
 
   if (!user) {
-    console.log('No user, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
-  console.log('User authenticated, rendering protected content');
   return <>{children}</>;
 };
 
 
 // =============================
-// Admin Route Component (MERGED VERSION)
+// Admin Route Component
 // =============================
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, userRole, loading } = useAuth();
-
-  console.log('AdminRoute check:', { user, userRole, loading });
 
   if (loading) {
     return (
@@ -98,16 +115,13 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   if (!user) {
-    console.log('No user, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
   if (userRole !== 'admin') {
-    console.log('User is not admin, role:', userRole);
     return <Navigate to="/dashboard" replace />;
   }
 
-  console.log('Admin access granted');
   return <>{children}</>;
 };
 
@@ -117,9 +131,11 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // =============================
 const AppRoutes: React.FC = () => {
   const location = useLocation();
-  const isDashboard =
-    location.pathname.startsWith('/dashboard') ||
-    location.pathname.startsWith('/admin');
+
+  const hideLayout =
+  location.pathname.startsWith('/dashboard') ||
+  location.pathname.startsWith('/admin') ||
+  location.pathname === '/login';
 
   return (
     <Box
@@ -129,7 +145,7 @@ const AppRoutes: React.FC = () => {
         minHeight: '100vh',
       }}
     >
-      <Navbar />
+  {!hideLayout && <Navbar />}
 
       <Box sx={{ flex: 1 }}>
         <Routes>
@@ -139,10 +155,14 @@ const AppRoutes: React.FC = () => {
           <Route path="/services" element={<Services />} />
           <Route path="/membership" element={<Membership />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/loan-calculator" element={<LoanCalculator />} />
+          <Route path="/governance" element={<Governance />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/loan-policy" element={<LoanPolicy />} />
+          <Route path="/termsandconditions" element={<TermsAndConditions />} />
 
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
-          {/* <Route path="/register" element={<Register />} /> */}
 
           {/* Dashboard Routes */}
           <Route
@@ -213,12 +233,12 @@ const AppRoutes: React.FC = () => {
           />
 
           {/* Catch All */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+<Route path="*" element={<NotFound />} />
         </Routes>
       </Box>
 
-      {/* Hide footer on dashboard & admin */}
-      {!isDashboard && <Footer />}
+      {/* Hide footer on dashboard, admin & login */}
+  {!hideLayout && <Footer />}
     </Box>
   );
 };
@@ -233,6 +253,7 @@ const App: React.FC = () => {
       <CssBaseline />
       <AuthProvider>
         <Router>
+          <ScrollToTop />
           <InactivityProvider>
             <AppRoutes />
           </InactivityProvider>
