@@ -27,18 +27,34 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const isAbortError = (error: unknown): boolean => {
+  if (!error) return false;
+  if (error instanceof Error && error.name === 'AbortError') return true;
+  if (typeof error === 'object' && 'message' in error) {
+    const msg = (error as any).message ?? '';
+    return msg.includes('AbortError') || msg.includes('signal is aborted');
+  }
+  return false;
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<string | null>(null);
   const [member, setMember] = useState<Member | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const isLoggingIn = useRef(false);
 
-  // Fetch member profile — resilient to AbortErrors (React 18 Strict Mode)
+  const isLoggingIn = useRef(false);
+  const initialSessionHandled = useRef(false);
+
+  const finalizeInitialSession = () => {
+    if (!initialSessionHandled.current) {
+      initialSessionHandled.current = true;
+      setLoading(false);
+    }
+  };
+
   const fetchProfile = async (authId: string): Promise<Member | null> => {
     try {
-      console.log('Fetching profile for auth_id:', authId);
-
       const { data, error } = await supabase
         .from('members')
         .select('*')
@@ -46,99 +62,85 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .maybeSingle();
 
       if (error) {
-        // Abort errors are expected during Strict Mode double-invoke — suppress them
-        if (error.message?.includes('AbortError') || error.code === '') {
-          console.log('Profile fetch aborted (Strict Mode) — ignoring');
-          return null;
-        }
+        if (error.message?.includes('AbortError') || error.code === '') return null;
         console.error('Profile fetch error:', error);
         return null;
       }
 
-      if (data) {
-        console.log('Member found:', data.member_number, 'Role:', data.role || 'member');
-        return data;
-      }
-
-      console.log('No member found for auth_id:', authId);
-      return null;
-    } catch (error: any) {
-      if (error?.name === 'AbortError') {
-        console.log('Profile fetch aborted (AbortError) — ignoring');
-        return null;
-      }
+      return data ?? null;
+    } catch (error: unknown) {
+      if (isAbortError(error)) return null;
       console.error('Fetch profile error:', error);
       return null;
     }
   };
 
+  const applyMemberState = (memberData: Member) => {
+    setUser(memberData.member_number);
+    setMember(memberData);
+    setUserRole(memberData.role || 'member');
+  };
+
+  const clearMemberState = () => {
+    setUser(null);
+    setMember(null);
+    setUserRole(null);
+  };
+
   useEffect(() => {
     let isMounted = true;
-    console.log('Initializing auth...');
 
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!isMounted) return;
-
-        if (session?.user) {
-          console.log('Session found:', session.user.id);
-          const memberData = await fetchProfile(session.user.id);
-
-          if (!isMounted) return;
-
-          if (memberData) {
-            setUser(memberData.member_number);
-            setMember(memberData);
-            setUserRole(memberData.role || 'member');
-            console.log('User authenticated:', memberData.member_number, 'Role:', memberData.role);
-          }
-        }
-      } catch (error) {
-        if (!isMounted) return;
-        console.error('Initialize auth error:', error);
-      } finally {
-        if (isMounted) setLoading(false);
+    // Safety net — if INITIAL_SESSION never fires or is aborted by Strict Mode,
+    // force loading off after 3 seconds so the app never hangs forever
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        console.warn('Auth safety timer fired — forcing loading off');
+        finalizeInitialSession();
       }
-    };
+    }, 3000);
 
-    initializeAuth();
-
-    // Auth state listener — skips profile fetch if login() is already handling it
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // ── INITIAL_SESSION ──────────────────────────────────────────────
+      // Fires once on mount. Restores session silently if one exists.
+      // This is the only place we auto-restore on page load.
+      if (event === 'INITIAL_SESSION') {
+        try {
+          if (session?.user && isMounted) {
+            const memberData = await fetchProfile(session.user.id);
+            if (isMounted && memberData) applyMemberState(memberData);
+          }
+        } catch (err) {
+          if (!isAbortError(err)) console.error('INITIAL_SESSION error:', err);
+        } finally {
+          clearTimeout(safetyTimer);
+          if (isMounted) finalizeInitialSession();
+        }
+        return;
+      }
+
       if (!isMounted) return;
 
-      console.log('Auth state changed:', event);
+      // ── SIGNED_IN ────────────────────────────────────────────────────
+      // Supabase fires this on session restore AND explicit login.
+      // We only care about explicit login — login() handles fetchProfile directly.
+      // All other SIGNED_IN events (token refresh, restore) are ignored because
+      // INITIAL_SESSION already covered the restore case above.
+      if (event === 'SIGNED_IN') return;
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        // login() sets isLoggingIn.current = true before signInWithPassword,
-        // so we skip the duplicate fetchProfile call here to avoid a race condition
-        if (isLoggingIn.current) {
-          console.log('Login in progress — skipping onAuthStateChange profile fetch');
-          return;
-        }
+      // ── TOKEN_REFRESHED ──────────────────────────────────────────────
+      // Background token refresh — no UI action needed.
+      if (event === 'TOKEN_REFRESHED') return;
 
-        // Handles session restores, OAuth callbacks, magic links, etc.
-        const memberData = await fetchProfile(session.user.id);
-
-        if (!isMounted) return;
-
-        if (memberData) {
-          setUser(memberData.member_number);
-          setMember(memberData);
-          setUserRole(memberData.role || 'member');
-          console.log('Auth state login:', memberData.member_number, 'Role:', memberData.role);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setMember(null);
-        setUserRole(null);
+      // ── SIGNED_OUT ───────────────────────────────────────────────────
+      if (event === 'SIGNED_OUT') {
+        clearMemberState();
+        finalizeInitialSession();
       }
     });
 
     return () => {
       isMounted = false;
+      clearTimeout(safetyTimer);
       data.subscription.unsubscribe();
     };
   }, []);
@@ -147,20 +149,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isLoggingIn.current = true;
     try {
       setLoading(true);
-      console.log('Attempting login for:', email);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-      if (error) {
-        console.error('Login error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data.user) {
-        console.log('Auth successful, fetching profile...');
         const memberData = await fetchProfile(data.user.id);
 
         if (!memberData) {
@@ -168,18 +162,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           throw new Error('Member profile not found. Please contact support.');
         }
 
-        setUser(memberData.member_number);
-        setMember(memberData);
-        setUserRole(memberData.role || 'member');
-
-        console.log('Login complete:', {
-          member_number: memberData.member_number,
-          role: memberData.role,
-          email: memberData.email,
-        });
+        applyMemberState(memberData);
       }
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch (error: unknown) {
+      if (isAbortError(error)) {
+        throw new Error('Login was interrupted. Please try again.');
+      }
       throw error;
     } finally {
       isLoggingIn.current = false;
@@ -191,9 +179,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
       await supabase.auth.signOut();
-      setUser(null);
-      setMember(null);
-      setUserRole(null);
+      clearMemberState();
       localStorage.clear();
       window.location.href = '/login';
     } catch (error) {
@@ -209,9 +195,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: data.email,
           password: data.password,
@@ -231,12 +215,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       const { member } = await response.json();
-
-      if (member) {
-        setUser(member.member_number);
-        setMember(member);
-        setUserRole(member.role || 'member');
-      }
+      if (member) applyMemberState(member);
     } catch (error) {
       console.error('Registration error:', error);
       throw error;

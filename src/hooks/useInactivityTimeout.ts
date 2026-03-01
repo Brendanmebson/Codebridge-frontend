@@ -8,7 +8,7 @@ interface UseInactivityTimeoutOptions {
 }
 
 export const useInactivityTimeout = ({
-  timeout = 15000, // 15 seconds default
+  timeout = 30000, // 30 seconds default
   onTimeout,
   enabled = true,
 }: UseInactivityTimeoutOptions = {}) => {

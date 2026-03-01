@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, TextField, Button, Alert,
   InputAdornment, IconButton, useTheme,
@@ -20,12 +20,19 @@ const Login: React.FC = () => {
   const br = shape.borderRadius as number;
 
   const navigate = useNavigate();
-  const { login, loading: authLoading } = useAuth();
+  const { login, loading: authLoading, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
   const [formData, setFormData] = useState({ email: '', password: '' });
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,7 +44,7 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       await login(formData.email, formData.password);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'message' in err) {
         setError((err as { message: string }).message || 'Login failed. Check your credentials.');
@@ -49,7 +56,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const isSubmitting = loading || authLoading;
+  const isSubmitting = loading;
 
   const fieldSx = (name: string) => ({
     '& .MuiOutlinedInput-root': {
@@ -92,6 +99,33 @@ const Login: React.FC = () => {
     'https://images.unsplash.com/photo-1573496799652-408c2ac9fe98?w=60&q=80',
   ];
 
+  // Show spinner while auth state is being resolved
+  if (authLoading) {
+    return (
+      <Box sx={{
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: palette.background.default,
+      }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <Box sx={{
+            width: 40, height: 40, borderRadius: '50%',
+            border: `3px solid ${palette.primary.main}20`,
+            borderTop: `3px solid ${palette.primary.main}`,
+            animation: 'spin 0.8s linear infinite',
+            mx: 'auto', mb: 2,
+            '@keyframes spin': { to: { transform: 'rotate(360deg)' } },
+          }} />
+          <Typography variant="caption" sx={{ color: palette.text.secondary }}>
+            Loading…
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{
       height: '100vh',
@@ -119,8 +153,6 @@ const Login: React.FC = () => {
         {[...Array(5)].map((_, i) => (
           <Box key={i} sx={{ position: 'absolute', width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.45)', top: `${15 + i * 15}%`, right: `${6 + (i % 3) * 5}%`, animation: `d${i} ${2.8 + i * 0.3}s ease-in-out ${i * 0.35}s infinite`, [`@keyframes d${i}`]: { '0%,100%': { opacity: 0.15, transform: 'scale(1)' }, '50%': { opacity: 0.9, transform: 'scale(1.6)' } } }} />
         ))}
-
-
 
         {/* Middle: content */}
         <Box sx={{ position: 'relative', zIndex: 2 }}>
@@ -176,7 +208,6 @@ const Login: React.FC = () => {
         </Box>
       </Box>
 
-
       {/* ── RIGHT PANEL ─────────────────────────────────────── */}
       <Box sx={{
         display: 'flex',
@@ -190,7 +221,6 @@ const Login: React.FC = () => {
         position: 'relative',
       }}>
         <Box sx={{ position: 'absolute', bottom: -60, right: -60, width: 280, height: 280, borderRadius: '50%', background: `radial-gradient(circle, ${palette.primary.main}06, transparent 70%)`, pointerEvents: 'none' }} />
-
 
         <Box sx={{ width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }}>
 
